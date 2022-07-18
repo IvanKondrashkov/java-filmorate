@@ -1,5 +1,7 @@
 package ru.yandex.praktikum.validations;
 
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.praktikum.model.Film;
 import java.time.Month;
 import java.time.LocalDate;
@@ -13,23 +15,19 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-import ru.yandex.praktikum.controller.FilmController;
 import ru.yandex.praktikum.utils.LocalDateAdapter;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(FilmController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class FilmValidationTest {
     private Film film;
     private Gson gson;
-    private MockMvc mockMvc;
     @Autowired
-    private WebApplicationContext context;
+    private MockMvc mockMvc;
 
 
     @BeforeEach
@@ -39,10 +37,6 @@ public class FilmValidationTest {
                 .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
                 .serializeNulls()
                 .create();
-
-        this.mockMvc = MockMvcBuilders
-                .webAppContextSetup(this.context)
-                .build();
     }
 
     @AfterEach
@@ -71,7 +65,7 @@ public class FilmValidationTest {
                         .post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(gson.toJson(film)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 
     @ParameterizedTest
@@ -90,7 +84,7 @@ public class FilmValidationTest {
                         .post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(gson.toJson(film)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
@@ -101,7 +95,7 @@ public class FilmValidationTest {
                         .post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(gson.toJson(film)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 
     @ParameterizedTest
@@ -113,6 +107,6 @@ public class FilmValidationTest {
                         .post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(gson.toJson(film)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 }

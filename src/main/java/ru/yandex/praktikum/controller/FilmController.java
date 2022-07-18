@@ -1,48 +1,59 @@
 package ru.yandex.praktikum.controller;
 
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.LinkedHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import javax.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.praktikum.exception.ValidationException;
 import ru.yandex.praktikum.model.Film;
+import ru.yandex.praktikum.service.FilmService;
 
 @Slf4j
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
 public class FilmController {
-    private AtomicLong idCurrent = new AtomicLong();
-    private final Map<Long, Film> films = new LinkedHashMap<>();
+    private final FilmService filmService;
 
-    private Long getIdCurrent() {
-        return idCurrent.incrementAndGet();
+    @GetMapping("/{id}")
+    public Film findById(@PathVariable Long id) {
+        log.info("Send get request /films/{}", id);
+        return filmService.findById(id);
     }
 
     @GetMapping
     public List<Film> findAll() {
-        return new ArrayList<>(films.values());
+        log.info("Send get request /films");
+        return filmService.findAll();
+    }
+
+    @GetMapping("/popular")
+    public List<Film> findPopularFilms(@RequestParam(value = "count", defaultValue = "10", required = false) Integer count) {
+        log.info("Send get request /films/popular?count={}", count);
+        return filmService.findPopularFilms(count);
     }
 
     @PostMapping
     public Film save(@Valid @RequestBody Film film) {
-        log.info("Save film in storage: {}", film);
-        film.setId(getIdCurrent());
-        films.put(film.getId(), film);
-        return film;
+        log.info("Send post request /films {}", film);
+        return filmService.save(film);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
-        if (!films.containsKey(film.getId())) {
-            RuntimeException e = new ValidationException("A film with this id was not found!");
-            log.error(e.getMessage());
-            throw e;
-        }
-        films.put(film.getId(), film);
-        return film;
+        log.info("Send put request /films {}", film);
+        return filmService.update(film);
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+        log.info("Send put request /films/{}/like/{}", id, userId);
+        filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void deleteLike(@PathVariable Long id, @PathVariable Long userId) {
+        log.info("Send delete request /films/{}/like/{}", id, userId);
+        filmService.deleteLike(id, userId);
     }
 }

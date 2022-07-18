@@ -1,13 +1,18 @@
 package ru.yandex.praktikum.model;
 
-import lombok.Data;
-import lombok.AllArgsConstructor;
+import lombok.*;
+import java.util.Set;
+import java.util.HashSet;
 import java.time.LocalDate;
 import javax.validation.constraints.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import ru.yandex.praktikum.annotations.ReleaseDateConstraint;
 
-@Data
+@Setter
+@Getter
+@EqualsAndHashCode
 @AllArgsConstructor
+@NoArgsConstructor
 public class Film {
     private Long id;
     @NotBlank(message = "Incorrect film name has been entered")
@@ -18,4 +23,6 @@ public class Film {
     private LocalDate releaseDate;
     @Positive(message = "Incorrect film duration has been entered")
     private int duration;
+    @JsonInclude
+    private final Set<Long> likes = new HashSet<>();
 }

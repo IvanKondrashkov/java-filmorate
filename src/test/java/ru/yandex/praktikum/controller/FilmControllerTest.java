@@ -1,67 +1,117 @@
 package ru.yandex.praktikum.controller;
 
-import ru.yandex.praktikum.model.Film;
+import org.mockito.Mockito;
+import java.util.List;
 import java.util.Random;
 import java.time.Month;
 import java.time.LocalDate;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import ru.yandex.praktikum.dao.film.FilmStorage;
+import ru.yandex.praktikum.model.User;
+import ru.yandex.praktikum.model.Film;
+import ru.yandex.praktikum.dao.user.UserStorage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import ru.yandex.praktikum.exception.NotFoundException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 import ru.yandex.praktikum.utils.LocalDateAdapter;
-import ru.yandex.praktikum.exception.ValidationException;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.junit.jupiter.api.Assertions.*;
 
-@WebMvcTest(FilmController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 class FilmControllerTest {
     private Film film;
+    private User user;
     private Gson gson;
-    private MockMvc mockMvc;
     @Autowired
-    private WebApplicationContext context;
+    private MockMvc mockMvc;
+    @MockBean
+    private UserStorage userStorage;
+    @MockBean
+    private FilmStorage filmStorage;
 
 
     @BeforeEach
     void init() {
         film = new Film(1L, "Home Alone", "Rate 8.3", LocalDate.of(1990, Month.NOVEMBER, 10), 130);
+        user = new User(10L, "develop@mail.ru", "dev-java", "Jon", LocalDate.of(1992, Month.JANUARY, 14));
+
         gson = new GsonBuilder()
                 .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
                 .serializeNulls()
                 .create();
-
-        this.mockMvc = MockMvcBuilders
-                .webAppContextSetup(this.context)
-                .build();
     }
 
     @AfterEach
     void tearDown() {
         film = null;
+        user = null;
         gson = null;
         mockMvc = null;
     }
 
     @Test
+    @DisplayName("Send GET request /films/{id}")
+    void findById() throws Exception {
+        Mockito.when(filmStorage.findById(film.getId())).thenReturn(film);
+
+        this.mockMvc.perform(MockMvcRequestBuilders
+                        .get("/films/{id}", film.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").isNumber());
+    }
+
+    @Test
+    @DisplayName("Send GET request /films/{id}")
+    void findByRandomId() throws Exception {
+        Mockito.when(filmStorage.findById(film.getId())).thenReturn(film);
+
+        film.setId(new Random().nextLong());
+        String message = String.format("Film with id=%d not found!", film.getId());
+
+        this.mockMvc.perform(MockMvcRequestBuilders
+                        .get("/films/{id}", film.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof NotFoundException))
+                .andExpect(result -> assertEquals(message, result.getResolvedException().getMessage()));
+    }
+
+    @Test
     @DisplayName("Send GET request /films")
     void findAll() throws Exception {
-        save();
+        Mockito.when(filmStorage.findAll()).thenReturn(List.of(film));
 
         this.mockMvc.perform(MockMvcRequestBuilders
                         .get("/films")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").isNumber());
+    }
+
+    @Test
+    @DisplayName("Send GET request /films/popular")
+    void findPopularFilms() throws Exception {
+        Mockito.when(filmStorage.findById(film.getId())).thenReturn(film);
+        Mockito.when(userStorage.findById(user.getId())).thenReturn(user);
+        Mockito.when(filmStorage.findPopularFilms(10)).thenReturn(List.of(film));
+
+        this.mockMvc.perform(MockMvcRequestBuilders
+                        .get("/films/popular")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -77,7 +127,8 @@ class FilmControllerTest {
     @Test
     @DisplayName("Send PUT request /films")
     void update() throws Exception {
-        save();
+        Mockito.when(filmStorage.update(film)).thenReturn(film);
+
         film.setName("Titanic");
 
         this.mockMvc.perform(MockMvcRequestBuilders
@@ -91,16 +142,41 @@ class FilmControllerTest {
     @Test
     @DisplayName("Send PUT request /films by random id")
     void updateByRandomId() throws Exception {
-        final String message = "A film with this id was not found!";
-        save();
+        Mockito.when(filmStorage.findById(film.getId())).thenReturn(film);
+
+        String message = "Film with not found!";
         film.setId(new Random().nextLong());
 
         this.mockMvc.perform(MockMvcRequestBuilders
                         .put("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(gson.toJson(film)))
-                .andExpect(status().isInternalServerError())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof NotFoundException))
                 .andExpect(result -> assertEquals(message, result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    @DisplayName("Send POST request films/{id}/like/{userId}")
+    void addLike() throws Exception {
+        Mockito.when(filmStorage.findById(film.getId())).thenReturn(film);
+        Mockito.when(userStorage.findById(user.getId())).thenReturn(user);
+
+        this.mockMvc.perform(MockMvcRequestBuilders
+                        .put("/films/{id}/like/{userId}", film.getId(), user.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Send DELETE request films/{id}/like/{userId}")
+    void deleteLike() throws Exception {
+        Mockito.when(filmStorage.findById(film.getId())).thenReturn(film);
+        Mockito.when(userStorage.findById(user.getId())).thenReturn(user);
+
+        this.mockMvc.perform(MockMvcRequestBuilders
+                        .delete("/films/{id}/like/{userId}", film.getId(), user.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 }

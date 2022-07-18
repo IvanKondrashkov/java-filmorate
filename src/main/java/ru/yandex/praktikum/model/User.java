@@ -1,13 +1,18 @@
 package ru.yandex.praktikum.model;
 
-import lombok.Data;
-import lombok.AllArgsConstructor;
+import lombok.*;
+import java.util.Set;
+import java.util.HashSet;
 import java.time.LocalDate;
 import javax.validation.constraints.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import ru.yandex.praktikum.annotations.UserNameConstraint;
 
-@Data
+@Setter
+@Getter
+@EqualsAndHashCode
 @AllArgsConstructor
+@NoArgsConstructor
 @UserNameConstraint
 public class User {
     private Long id;
@@ -19,4 +24,6 @@ public class User {
     private String name;
     @Past(message = "Incorrect user birthday has been entered")
     private LocalDate birthday;
+    @JsonInclude
+    private final Set<Long> friends = new HashSet<>();
 }
