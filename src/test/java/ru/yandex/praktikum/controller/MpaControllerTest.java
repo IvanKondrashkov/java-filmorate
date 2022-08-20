@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserControllerTest {
+class MpaControllerTest {
 
     @BeforeEach
     void setUp() {
@@ -25,14 +25,6 @@ class UserControllerTest {
     }
 
     @Test
-    void findAllFriends() {
-    }
-
-    @Test
-    void findCommonFriends() {
-    }
-
-    @Test
     void save() {
     }
 
@@ -42,13 +34,5 @@ class UserControllerTest {
 
     @Test
     void deleteById() {
-    }
-
-    @Test
-    void addFriend() {
-    }
-
-    @Test
-    void deleteFriend() {
     }
 }
