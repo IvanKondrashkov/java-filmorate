@@ -58,6 +58,15 @@ public class UserService {
         return user;
     }
 
+    public void deleteById(Long id) {
+        final User user = userStorage.findById(id);
+
+        if (Objects.isNull(user)) {
+            throw new NotFoundException(String.format("User with id=%d not found!", id));
+        }
+        userStorage.deleteById(id);
+    }
+
     public void addFriend(Long id, Long friendId) {
         final User user = userStorage.findById(id);
         final User friend = userStorage.findById(friendId);

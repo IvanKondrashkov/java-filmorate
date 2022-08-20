@@ -1,8 +1,5 @@
 package ru.yandex.praktikum.validations;
 
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import ru.yandex.praktikum.model.User;
 import java.time.Month;
 import java.time.LocalDate;
 import com.google.gson.Gson;
@@ -15,9 +12,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import ru.yandex.praktikum.model.User;
 import ru.yandex.praktikum.utils.LocalDateAdapter;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -33,7 +33,12 @@ public class UserValidationTest {
 
     @BeforeEach
     void init() {
-        user = new User(1L, "develop@mail.ru", "dev-java", "Jon", LocalDate.of(1992, Month.JANUARY, 14));
+        user = new User(1L
+                , "Jon"
+                , "dev-java"
+                , "develop@mail.ru"
+                , LocalDate.of(1992, Month.JANUARY, 14));
+
         gson = new GsonBuilder()
                 .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
                 .serializeNulls()

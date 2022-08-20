@@ -9,6 +9,7 @@ public interface FilmStorage {
     List<Film> findPopularFilms(Integer count);
     Film save(Film film);
     Film update(Film film);
+    void deleteById(Long id);
     void addLike(Long id, Long userId);
     void deleteLike(Long id, Long userId);
 }

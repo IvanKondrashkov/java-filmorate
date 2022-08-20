@@ -45,6 +45,15 @@ public class FilmService {
         return film;
     }
 
+    public void deleteById(Long id) {
+        final Film film = filmStorage.findById(id);
+
+        if (Objects.isNull(film)) {
+            throw new NotFoundException(String.format("Film with id=%d not found!", id));
+        }
+        filmStorage.deleteById(id);
+    }
+
     public void addLike(Long id, Long userId) {
         final Film film = filmStorage.findById(id);
         final User user = userService.findById(userId);

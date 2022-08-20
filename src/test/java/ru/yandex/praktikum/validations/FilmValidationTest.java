@@ -1,10 +1,8 @@
 package ru.yandex.praktikum.validations;
 
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import ru.yandex.praktikum.model.Film;
 import java.time.Month;
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.junit.jupiter.api.Test;
@@ -15,9 +13,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import ru.yandex.praktikum.model.Film;
+import ru.yandex.praktikum.model.Genre;
+import ru.yandex.praktikum.model.Mpa;
 import ru.yandex.praktikum.utils.LocalDateAdapter;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,7 +35,14 @@ public class FilmValidationTest {
 
     @BeforeEach
     void init() {
-        film = new Film(1L, "Home Alone", "Rate 8.3", LocalDate.of(1990, Month.NOVEMBER, 10), 130);
+        film = new Film(1L
+                , "Home Alone"
+                , "Rate 8.3"
+                , LocalDate.of(1990, Month.NOVEMBER, 10)
+                , 130, new Mpa(1L,"G"),
+                new LinkedHashSet<>());
+        film.getGenres().add(new Genre(1L, "Комедия"));
+
         gson = new GsonBuilder()
                 .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
                 .serializeNulls()
